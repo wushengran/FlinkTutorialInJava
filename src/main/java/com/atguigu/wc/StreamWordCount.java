@@ -15,6 +15,8 @@ import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.net.URL;
+
 /**
  * @ClassName: StreamWordCount
  * @Description:
@@ -26,12 +28,14 @@ public class StreamWordCount {
         // 创建流处理执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 //        env.setParallelism(1);
+//        env.disableOperatorChaining();
 
 //        // 从文件中读取数据
 //        String inputPath = "D:\\Projects\\BigData\\FlinkTutorial\\src\\main\\resources\\hello.txt";
 //        DataStream<String> inputDataStream = env.readTextFile(inputPath);
 
         // 用parameter tool工具从程序启动参数中提取配置项
+
         ParameterTool parameterTool = ParameterTool.fromArgs(args);
         String host = parameterTool.get("host");
         int port = parameterTool.getInt("port");
@@ -41,9 +45,9 @@ public class StreamWordCount {
 
 
         // 基于数据流进行转换计算
-        DataStream<Tuple2<String, Integer>> resultStream = inputDataStream.flatMap(new WordCount.MyFlatMapper())
+        DataStream<Tuple2<String, Integer>> resultStream = inputDataStream.flatMap(new WordCount.MyFlatMapper()).slotSharingGroup("green")
                 .keyBy(0)
-                .sum(1).setParallelism(2);
+                .sum(1).setParallelism(2).slotSharingGroup("red");
 
         resultStream.print().setParallelism(1);
 
